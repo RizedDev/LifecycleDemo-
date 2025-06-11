@@ -9,27 +9,9 @@
     android:gravity="center"
     tools:context=".activities.MainActivity">
 
-    <Button
-        android:id="@+id/goToSecondActivityButton"
-        android:text="Перейти на второй экран"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/bookRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <TextView
-        android:id="@+id/counterTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/up_count"
-        android:text="Увеличить счёт"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/down_count"
-        android:text="Уменьшить счёт"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_height="match_parent"/>
 
 </LinearLayout>
