@@ -2,14 +2,10 @@ package com.example.lifecycledemo.activities
 
 import android.app.DatePickerDialog
 import android.content.Context
-import android.content.Intent
 import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
-import android.view.ContextMenu
 import android.view.MenuItem
-import android.view.View
-import android.widget.LinearLayout
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,13 +13,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lifecycledemo.R
 import com.example.lifecycledemo.adapters.BookAdapter
 import com.example.lifecycledemo.adapters.OnItemClickListener
+import com.example.lifecycledemo.constants.APP_LAUNCH_COUNT_KEY
 import com.example.lifecycledemo.constants.COUNTER_KEY
-import com.example.lifecycledemo.constants.MESSAGE_KEY
-import com.example.lifecycledemo.constants.NUMBER_KEY
 import com.example.lifecycledemo.constants.TAG
 import com.example.lifecycledemo.data.model.Book
 import com.example.lifecycledemo.databinding.ActivityMainBinding
 import com.example.lifecycledemo.utils.makeToast
+import androidx.core.content.edit
+import com.example.lifecycledemo.constants.IS_FIRST_RUN_KEY
 
 class MainActivity : AppCompatActivity(), OnItemClickListener {
 
@@ -36,12 +33,29 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
         Book(4, "1984", "Дж. Оруэлл", 1949),
         Book(5, "Гордость и предубеждение", "Дж. Остин", 1813)
     )
+    private var appLaunchCount: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate вызван")
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val sharedPref = getSharedPreferences("MyAppSettings", Context.MODE_PRIVATE)
+        appLaunchCount = sharedPref.getInt(APP_LAUNCH_COUNT_KEY, 0)
+        appLaunchCount++
+        sharedPref.edit {
+            putInt(APP_LAUNCH_COUNT_KEY, appLaunchCount)
+        }
+
+        if (sharedPref.getBoolean(IS_FIRST_RUN_KEY, true)) {
+            sharedPref.edit {
+                putBoolean(IS_FIRST_RUN_KEY, false)
+            }
+        } else {
+            binding.firstAppRun.text = "Бывалый"
+        }
+        makeToast("Приложение запущено $appLaunchCount раз")
 
         if (savedInstanceState != null) {
             counter = savedInstanceState.getInt(COUNTER_KEY)

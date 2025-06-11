@@ -8,6 +8,13 @@
     android:orientation="vertical"
     android:gravity="center"
     tools:context=".activities.MainActivity">
+    
+    <TextView
+        android:id="@+id/firstAppRun"
+        android:text="В первые?"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/bookRecyclerView"
