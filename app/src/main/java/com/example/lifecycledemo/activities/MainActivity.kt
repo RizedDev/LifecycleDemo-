@@ -1,18 +1,31 @@
 package com.example.lifecycledemo.activities
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.lifecycledemo.adapters.BookAdapter
+import com.example.lifecycledemo.constants.COUNTER_KEY
+import com.example.lifecycledemo.constants.MESSAGE_KEY
+import com.example.lifecycledemo.constants.NUMBER_KEY
+import com.example.lifecycledemo.constants.TAG
+import com.example.lifecycledemo.data.model.Book
 import com.example.lifecycledemo.databinding.ActivityMainBinding
-
-const val TAG = "MainActivity"
-const val MESSAGE = "MESSAGE"
-const val NUMBER = "NUMBER"
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private var counter = 0
+    private val myBooks = mutableListOf(
+        Book(1, "Война и мир", "Л.Н. Толстой", 1869),
+        Book(2, "Мастер и Маргарита", "М.А. Булгаков", 1967),
+        Book(3, "Преступление и наказание", "Ф.М. Достоевский", 1866),
+        Book(4, "1984", "Дж. Оруэлл", 1949),
+        Book(5, "Гордость и предубеждение", "Дж. Остин", 1813)
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,12 +33,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        binding.goToSecondActivityButton.setOnClickListener {
-            val intent = Intent(this, SecondActivity::class.java)
-            intent.putExtra(MESSAGE, "Привет из первого экрана!")
-            intent.putExtra(NUMBER, 42)
-            startActivity(intent)
+        if (savedInstanceState != null) {
+            counter = savedInstanceState.getInt(COUNTER_KEY)
         }
+        Log.d(TAG, "значение востановлено")
+        binding.bookRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.bookRecyclerView.adapter = BookAdapter(myBooks)
+
+        initButton(this)
     }
 
     override fun onStart() {
@@ -56,5 +71,16 @@ class MainActivity : AppCompatActivity() {
     override fun onRestart() {
         super.onRestart()
         Log.d(TAG, "onRestart вызван")
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putInt(COUNTER_KEY, counter)
+        Log.d(TAG, "значение созранено")
+    }
+
+    private fun initButton(activity: Context) {
+
     }
 }
