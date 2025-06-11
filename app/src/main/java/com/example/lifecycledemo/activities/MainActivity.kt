@@ -1,13 +1,16 @@
 package com.example.lifecycledemo.activities
 
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.ContextMenu
 import android.view.MenuItem
 import android.view.View
 import android.widget.LinearLayout
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -106,13 +109,43 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
                     true
                 }
                 R.id.menu_delete_book -> {
-                    myBooks.removeAt(position)
-                    adapter.notifyItemRemoved(position)
-                    makeToast("Книга ${selectedBook.title} удалена")
+                    val deleteBookDialog = AlertDialog.Builder(this)
+                    deleteBookDialog.setTitle("Подтверждение удаления")
+                    deleteBookDialog.setMessage("Вы уверены, что хотите удалить книгу ${selectedBook.title}?")
+
+                    deleteBookDialog.setPositiveButton("Да") { _, _ ->
+                        myBooks.removeAt(position)
+                        adapter.notifyItemChanged(position)
+                        makeToast("Книга удалена")
+                    }
+
+                    deleteBookDialog.setNegativeButton("Нет") {_, _ ->
+                        makeToast("Удаление отменено")
+                    }
+
+                    deleteBookDialog.show()
                     true
                 }
                 R.id.menu_return_book -> {
                     makeToast("Книга ${selectedBook.title} возвращена")
+                    true
+                }
+                R.id.menu_edit_year -> {
+                    val calendar = Calendar.getInstance()
+                    val year = calendar.get(Calendar.YEAR)
+                    val month = calendar.get(Calendar.MONTH)
+                    val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+                    val datePickerDialog = DatePickerDialog(this,
+                        { _, selectedYear, selectedMonth, selectedDay ->
+                            val selectedDate = "$selectedDay.${selectedMonth + 1}.$selectedYear"
+                            selectedBook.yearPublished = selectedYear
+                            adapter.notifyItemChanged(position)
+                            Log.d(TAG, "${myBooks[0]}")
+                            makeToast("Выбрана дата: $selectedDate")
+                        }, year, month, day)
+
+                    datePickerDialog.show()
                     true
                 }
                 else -> super.onContextItemSelected(item)

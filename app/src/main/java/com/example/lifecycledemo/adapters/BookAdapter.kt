@@ -36,6 +36,7 @@ class BookAdapter(private val bookList: MutableList<Book>, private val listener:
             menu?.add(0, R.id.menu_borrow_book, 0, "Взять книгу")
             menu?.add(0, R.id.menu_return_book, 1, "Вернуть книгу")
             menu?.add(0, R.id.menu_delete_book, 2, "Удалить книгу")
+            menu?.add(0, R.id.menu_edit_year, 3, "Изменить год публикации")
         }
     }
 
