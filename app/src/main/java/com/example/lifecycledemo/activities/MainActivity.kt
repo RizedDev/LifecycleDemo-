@@ -20,20 +20,19 @@ import com.example.lifecycledemo.data.model.Book
 import com.example.lifecycledemo.databinding.ActivityMainBinding
 import com.example.lifecycledemo.utils.makeToast
 import androidx.core.content.edit
+import androidx.lifecycle.lifecycleScope
+import com.example.lifecycledemo.constants.IS_DB_POPULATED_KEY
 import com.example.lifecycledemo.constants.IS_FIRST_RUN_KEY
+import com.example.lifecycledemo.data.dao.BookDao
+import com.example.lifecycledemo.data.db.AppDatabase
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), OnItemClickListener {
 
     private lateinit var binding: ActivityMainBinding
     private var counter = 0
-    private var myBooks = mutableListOf(
-        Book(1, "Война и мир", "Л.Н. Толстой", 1869),
-        Book(2, "Мастер и Маргарита", "М.А. Булгаков", 1967),
-        Book(3, "Преступление и наказание", "Ф.М. Достоевский", 1866),
-        Book(4, "1984", "Дж. Оруэлл", 1949),
-        Book(5, "Гордость и предубеждение", "Дж. Остин", 1813)
-    )
     private var appLaunchCount: Int = 0
+    private lateinit var bookDao: BookDao
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,9 +61,36 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
         }
         Log.d(TAG, "значение востановлено")
 
-        val adapter = BookAdapter(myBooks, this)
-        binding.bookRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.bookRecyclerView.adapter = adapter
+        val db = AppDatabase.getDatabase(applicationContext)
+        bookDao = db.bookDao()
+
+        val isDbPopulated = sharedPref.getBoolean(IS_DB_POPULATED_KEY, false)
+
+        if (!isDbPopulated) {
+            lifecycleScope.launch {
+                bookDao.insertBook(Book(title = "Война и мир", author = "Л.Н. Толстой", yearPublished = 1869))
+                bookDao.insertBook(Book(title = "Мастер и Маргарита", author = "М.А. Булгаков", yearPublished = 1967))
+                bookDao.insertBook(Book(title = "Преступление и наказание", author = "Ф.М. Достоевский", yearPublished = 1866))
+                bookDao.insertBook(Book(title = "1984", author = "Дж. Оруэлл", yearPublished = 1949))
+                bookDao.insertBook(Book(title = "Гордость и предубеждение", author = "Дж. Остин", yearPublished = 1813))
+
+                sharedPref.edit {
+                    putBoolean(IS_DB_POPULATED_KEY, true)
+                }
+            }
+        }
+
+        lifecycleScope.launch {
+            bookDao.getAllBooks().collect { books ->
+                if (binding.bookRecyclerView.adapter == null) {
+                    binding.bookRecyclerView.adapter =
+                        BookAdapter(books.toMutableList(), this@MainActivity)
+                    binding.bookRecyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
+                } else {
+                    (binding.bookRecyclerView.adapter as BookAdapter).updateList(books.toMutableList())
+                }
+            }
+        }
 
         initButton(this)
     }
@@ -115,53 +141,56 @@ class MainActivity : AppCompatActivity(), OnItemClickListener {
         val position = adapter.selectedPosition
 
         if (position != RecyclerView.NO_POSITION) {
-            val selectedBook = myBooks[position]
+            val selectedBook = adapter.bookList[position]
 
             return when (item.itemId) {
                 R.id.menu_borrow_book -> {
                     makeToast("Книга ${selectedBook.title} взята")
                     true
                 }
+
                 R.id.menu_delete_book -> {
-                    val deleteBookDialog = AlertDialog.Builder(this)
-                    deleteBookDialog.setTitle("Подтверждение удаления")
-                    deleteBookDialog.setMessage("Вы уверены, что хотите удалить книгу ${selectedBook.title}?")
-
-                    deleteBookDialog.setPositiveButton("Да") { _, _ ->
-                        myBooks.removeAt(position)
-                        adapter.notifyItemChanged(position)
-                        makeToast("Книга удалена")
-                    }
-
-                    deleteBookDialog.setNegativeButton("Нет") {_, _ ->
-                        makeToast("Удаление отменено")
-                    }
-
-                    deleteBookDialog.show()
+                    AlertDialog.Builder(this)
+                        .setTitle("Подтверждение удаления")
+                        .setMessage("Вы уверены, что хотите удалить книгу ${selectedBook.title}?")
+                        .setPositiveButton("Да") { _, _ ->
+                            lifecycleScope.launch {
+                                bookDao.deleteBook(selectedBook)
+                            }
+                            makeToast("Книга удалена")
+                        }
+                        .setNegativeButton("Нет") { _, _ ->
+                            makeToast("Удаление отменено")
+                        }.show()
                     true
                 }
+
                 R.id.menu_return_book -> {
                     makeToast("Книга ${selectedBook.title} возвращена")
                     true
                 }
+
                 R.id.menu_edit_year -> {
                     val calendar = Calendar.getInstance()
+                    calendar.set(Calendar.YEAR, selectedBook.yearPublished)
                     val year = calendar.get(Calendar.YEAR)
                     val month = calendar.get(Calendar.MONTH)
                     val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-                    val datePickerDialog = DatePickerDialog(this,
-                        { _, selectedYear, selectedMonth, selectedDay ->
-                            val selectedDate = "$selectedDay.${selectedMonth + 1}.$selectedYear"
-                            selectedBook.yearPublished = selectedYear
-                            adapter.notifyItemChanged(position)
-                            Log.d(TAG, "${myBooks[0]}")
-                            makeToast("Выбрана дата: $selectedDate")
-                        }, year, month, day)
-
+                    val datePickerDialog = DatePickerDialog(
+                        this,
+                        { _, selectedYear, _, _ ->
+                            lifecycleScope.launch {
+                                val updateBook = selectedBook.copy(yearPublished = selectedYear)
+                                bookDao.updateBook(updateBook)
+                            }
+                            makeToast("Выбрана дата: $selectedYear")
+                        }, year, month, day
+                    )
                     datePickerDialog.show()
                     true
                 }
+
                 else -> super.onContextItemSelected(item)
             }
         }

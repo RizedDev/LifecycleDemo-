@@ -13,10 +13,16 @@ interface OnItemClickListener {
     fun onClick(book: Book)
 }
 
-class BookAdapter(private val bookList: MutableList<Book>, private val listener: OnItemClickListener) :
+class BookAdapter(val bookList: MutableList<Book>, private val listener: OnItemClickListener) :
     RecyclerView.Adapter<BookAdapter.BookViewHolder>() {
 
         var selectedPosition: Int = RecyclerView.NO_POSITION
+
+    fun updateList(newList: MutableList<Book>) {
+        bookList.clear()
+        bookList.addAll(newList)
+        notifyDataSetChanged()
+    }
 
     class BookViewHolder(item: View) : RecyclerView.ViewHolder(item), View.OnCreateContextMenuListener {
         val title: TextView = item.findViewById(R.id.bookTitleTW)
