@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -39,6 +40,22 @@ android {
 }
 
 dependencies {
+
+    //RecyclerView
+    implementation(libs.androidx.recyclerview)
+
+    // Room
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    // Room Kotlin Extensions and Coroutines support (для suspend-функций и Flow)
+    implementation(libs.androidx.room.ktx)
+
+    // Kotlin Coroutines (для асинхронных операций с Room)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
+
+    // Lifecycle components (для lifecycleScope в Activity/Fragment)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
